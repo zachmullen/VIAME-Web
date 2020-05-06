@@ -7,10 +7,16 @@ from subprocess import Popen, PIPE
 from girder_worker.app import app
 from girder_worker.utils import JobStatus
 
+
 class Config:
     def __init__(self):
-        self.pipeline_base_path = os.environ.get('VIAME_PIPELINES_PATH', '/opt/noaa/viame/configs/pipelines/')
-        self.viame_install_path = os.environ.get('VIAME_INSTALL_PATH', '/opt/noaa/viame')
+        self.pipeline_base_path = os.environ.get(
+            "VIAME_PIPELINES_PATH", "/opt/noaa/viame/configs/pipelines/"
+        )
+        self.viame_install_path = os.environ.get(
+            "VIAME_INSTALL_PATH", "/opt/noaa/viame"
+        )
+
 
 # TODO: Need to test with runnable viameweb
 @app.task(bind=True)
@@ -31,16 +37,17 @@ def run_pipeline(self, input_path, pipeline, input_type):
     for file_name in directory_files:
         full_file_path = os.path.join(input_path, file_name)
         is_directory = os.path.isdir(full_file_path)
-        if (not is_directory) and \
-           (not os.path.splitext(file_name)[1].lower() == '.csv'):
+        if (not is_directory) and (
+            not os.path.splitext(file_name)[1].lower() == ".csv"
+        ):
             filtered_directory_files.append(file_name)
 
     if len(filtered_directory_files) == 0:
-        raise ValueError('No media files found in {}'.format(input_path))
+        raise ValueError("No media files found in {}".format(input_path))
 
     pipeline_path = os.path.join(conf.pipeline_base_path, pipeline)
 
-    if input_type == 'video':
+    if input_type == "video":
         input_file = os.path.join(input_path, filtered_directory_files[0])
         command = [
             f"cd {conf.viame_install_path} &&",
@@ -52,7 +59,7 @@ def run_pipeline(self, input_path, pipeline, input_type):
             f"-s detector_writer:file_name={detector_output_path}",
             f"-s track_writer:file_name={track_output_path}",
         ]
-    elif input_type == 'image-sequence':
+    elif input_type == "image-sequence":
         with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as temp2:
             temp2.writelines(
                 (
@@ -71,14 +78,18 @@ def run_pipeline(self, input_path, pipeline, input_type):
             f"-s track_writer:file_name={track_output_path}",
         ]
     else:
-        raise ValueError('Unknown input type: {}'.format(input_type))
+        raise ValueError("Unknown input type: {}".format(input_type))
 
     cmd = " ".join(command)
-    print('Running command:', cmd)
-    process = Popen(cmd, stderr=PIPE, stdout=PIPE, shell=True, executable='/bin/bash')
+    print("Running command:", cmd)
+    process = Popen(cmd, stderr=PIPE, stdout=PIPE, shell=True, executable="/bin/bash")
     stdout, stderr = process.communicate()
     if process.returncode > 0:
-        raise RuntimeError('Pipeline exited with nonzero status code {}: {}'.format(process.returncode, str(stderr)))
+        raise RuntimeError(
+            "Pipeline exited with nonzero status code {}: {}".format(
+                process.returncode, str(stderr)
+            )
+        )
     else:
         self.job_manager.write(str(stdout) + "\n" + str(stderr))
 
@@ -106,23 +117,30 @@ def convert_video(self, path, folderId, token, auxiliaryFolderId):
     file_name = os.path.join(path, os.listdir(path)[0])
     command = [
         "ffprobe",
-        "-print_format", "json",
-        "-v", "quiet",
+        "-print_format",
+        "json",
+        "-v",
+        "quiet",
         "-show_format",
         "-show_streams",
         file_name,
     ]
     process = Popen(command, stderr=PIPE, stdout=PIPE)
     stdout = process.communicate()[0]
-    jsoninfo = json.loads(stdout.decode('utf-8'))
-    videostream = list(filter(lambda x: x["codec_type"] == "video", jsoninfo["streams"]))
+    jsoninfo = json.loads(stdout.decode("utf-8"))
+    videostream = list(
+        filter(lambda x: x["codec_type"] == "video", jsoninfo["streams"])
+    )
     if len(videostream) != 1:
-        raise Exception('Expected 1 video stream, found {}'.format(len(videostream)))
+        raise Exception("Expected 1 video stream, found {}".format(len(videostream)))
 
-    self.girder_client.addMetadataToFolder(folderId, {
-        "fps": 5,  # TODO: current time system doesn't allow for non-int framerates
-        "ffprobe_info": videostream[0],
-    })
+    self.girder_client.addMetadataToFolder(
+        folderId,
+        {
+            "fps": 5,  # TODO: current time system doesn't allow for non-int framerates
+            "ffprobe_info": videostream[0],
+        },
+    )
 
     process = Popen(
         [

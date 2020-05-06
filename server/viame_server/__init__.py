@@ -42,7 +42,7 @@ def load_pipelines():
 
 class GirderPlugin(plugin.GirderPlugin):
     def load(self, info):
-        
+
         info["apiRoot"].viame = Viame(pipelines=load_pipelines())
         info["apiRoot"].viame_detection = ViameDetection()
         # Relocate Girder
@@ -62,8 +62,16 @@ class GirderPlugin(plugin.GirderPlugin):
         )
 
         # Create dependency on worker
-        plugin.getPlugin('worker').load(info)
-        Setting().set('worker.api_url', os.environ.get('WORKER_API_URL', 'http://girder:8080/api/v1'))
-        Setting().set('worker.broker', os.environ.get('WORKER_BROKER', 'amqp://guest:guest@rabbit/'))
-        Setting().set('worker.backend', os.environ.get('WORKER_BACKEND', 'amqp://guest:guest@rabbit/'))
-
+        plugin.getPlugin("worker").load(info)
+        Setting().set(
+            "worker.api_url",
+            os.environ.get("WORKER_API_URL", "http://girder:8080/api/v1"),
+        )
+        Setting().set(
+            "worker.broker",
+            os.environ.get("WORKER_BROKER", "amqp://guest:guest@rabbit/"),
+        )
+        Setting().set(
+            "worker.backend",
+            os.environ.get("WORKER_BACKEND", "amqp://guest:guest@rabbit/"),
+        )

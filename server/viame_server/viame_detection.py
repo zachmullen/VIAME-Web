@@ -12,7 +12,11 @@ from girder.models.folder import Folder
 from girder.models.upload import Upload
 from girder.models.file import File
 
-from .utils import move_existing_result_to_auxiliary_folder, validVideoFormats, webValidVideoFormats
+from .utils import (
+    move_existing_result_to_auxiliary_folder,
+    validVideoFormats,
+    webValidVideoFormats,
+)
 
 
 class ViameDetection(Resource):
