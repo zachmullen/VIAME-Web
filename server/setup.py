@@ -10,7 +10,6 @@ requirements = [
     "girder_worker_utils==0.8.5",
     "pysnooper",
     "dacite",
-    "diva-boiler"
 ]
 
 setup(

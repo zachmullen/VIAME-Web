@@ -18,8 +18,6 @@ async function getExportUrls(id: string) {
 }
 
 async function getDetections(folderId: string, formatting = 'track_json') {
-  console.log('GETTTTTTTTTTTTT DETECTIONSSSSSSSSSSS');
-  console.log(folderId);
   const { data } = await girderRest.get('viame_detection', {
     params: { folderId, formatting },
   });

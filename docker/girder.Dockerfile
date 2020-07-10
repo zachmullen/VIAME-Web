@@ -27,9 +27,18 @@ RUN chmod +x /tini
 
 WORKDIR /home/viame_girder
 
+ADD docker/stumpf-diva/boiler /home/viame_girder/
+RUN pip install GitPython
+RUN pip install packaging
+RUN pip install pyxdg
+RUN pip install sentry_sdk
+RUN pip install tabulate
+RUN pip install python-gitlab
+
 COPY docker/provision /home/provision
 COPY server/setup.py /home/viame_girder/
 RUN pip install --no-cache-dir .
+
 
 COPY server/ /home/viame_girder/
 RUN pip install --no-deps .

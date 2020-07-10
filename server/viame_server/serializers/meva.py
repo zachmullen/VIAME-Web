@@ -122,59 +122,62 @@ def parse_actor_map_to_tracks(actor_map):
 
 
 def deserialize_types(file, actor_map):
-    yml = kpf.load_yaml(file)
-    for type_packet in yml:
-        if kpf.TYPES in type_packet:
-            kpf_types = type_packet[kpf.TYPES]
-            id1 = kpf_types[kpf.ACTOR_ID]
-            cset3 = kpf_types[kpf.CSET3]
-            cset3keys = list(cset3.keys())
-            if len(cset3keys) != 1:
-                raise BoilerError(f'{kpf.CSET3} should only have 1 key, found {cset3keys}')
-            name = cset3keys[0]
-            if id1 in actor_map:
-                actor_map[id1].actor_type = name
-                actor_map[id1].actor_id = id1
-            else:
-                actor_map[id1] = Actor(
-                    actor_type=name, detections=[], actor_id=id1, confidence=cset3[name]
-                )  # type: ignore
+    kpf.deserialize_types(file, actor_map)
+    # yml = kpf.load_yaml(file)
+    # for type_packet in yml:
+    #     if kpf.TYPES in type_packet:
+    #         kpf_types = type_packet[kpf.TYPES]
+    #         id1 = kpf_types[kpf.ACTOR_ID]
+    #         cset3 = kpf_types[kpf.CSET3]
+    #         cset3keys = list(cset3.keys())
+    #         if len(cset3keys) != 1:
+    #             raise BoilerError(f'{kpf.CSET3} should only have 1 key, found {cset3keys}')
+    #         name = cset3keys[0]
+    #         if id1 in actor_map:
+    #             actor_map[id1].actor_type = name
+    #             actor_map[id1].actor_id = id1
+    #             actor_map[id1].confidence = cset3[name]
+    #         else:
+    #             actor_map[id1] = models.Actor(
+    #                 actor_type=name, detections=[], actor_id=id1, confidence=cset3[name]
+    #             )  # type: ignore
 
 
 
 def deserialize_geom(file, actor_map):
-    # kpf.deserialize_geom(file, actor_map)
-    yml = kpf.load_yaml(file)
-    for geom_packet in yml:
-        if kpf.GEOM in geom_packet:
-            geom = geom_packet[kpf.GEOM]
-            actor_id = geom[kpf.ACTOR_ID]
-            frame = geom[kpf.FRAME]
-            timestamp = geom[kpf.SECONDS]
-            geom_id = geom[kpf.GEOM_ID]
-            box = geom[kpf.BOX]
-            box = [int(n) for n in box.split(' ')]
-            if len(box) != 4:
-                raise BoilerError('expect bounding box to have 4 values')
-            keyframe = False
-            if kpf.KEYFRAME in geom:
-                keyframe = geom[kpf.KEYFRAME]
-            box = models.Box(left=box[0], top=box[1], right=box[2], bottom=box[3])
-            detection = Detection(frame=frame, box=box, keyframe=keyframe, geom_id=geom_id, timestamp=timestamp)
+    kpf.deserialize_geom(file, actor_map)
+    # yml = kpf.load_yaml(file)
+    # for geom_packet in yml:
+    #     if kpf.GEOM in geom_packet:
+    #         geom = geom_packet[kpf.GEOM]
+    #         actor_id = geom[kpf.ACTOR_ID]
+    #         frame = geom[kpf.FRAME]
+    #         timestamp = geom[kpf.SECONDS]
+    #         geom_id = geom[kpf.GEOM_ID]
+    #         box = geom[kpf.BOX]
+    #         box = [int(n) for n in box.split(' ')]
+    #         if len(box) != 4:
+    #             raise BoilerError('expect bounding box to have 4 values')
+    #         keyframe = False
+    #         if kpf.KEYFRAME in geom:
+    #             keyframe = geom[kpf.KEYFRAME]
+    #         box = models.Box(left=box[0], top=box[1], right=box[2], bottom=box[3])
+    #         detection = models.Detection(frame=frame, box=box, keyframe=keyframe, geom_id=geom_id, timestamp=timestamp)
 
-            if actor_id in actor_map:
-                actor_map[actor_id].detections.append(detection)
-            else:
-                actor_map[actor_id] = Actor(  # type: ignore
-                    actor_type='other', begin=frame, end=frame, detections=[detection], actor_id=actor_id
-                )
+    #         if actor_id in actor_map:
+    #             actor_map[actor_id].detections.append(detection)
+    #         else:
+    #             actor_map[actor_id] = models.Actor(  # type: ignore
+    #                 actor_type='other', begin=frame, end=frame, detections=[detection], actor_id=actor_id
+    #   5f07757642a482208586893b          )
 
 def deserialize_activities(file, activity_map, actor_map):
-    yml = kpf.load_yaml(file)
-    for activity_packet in yml:
-        if kpf.ACTIVITY in activity_packet:
-            activity = _deserialize_activity(activity_packet, actor_map)
-            activity_map[activity.activity_id] = activity
+    kpf.deserialize_activities(file, activity_map, actor_map)
+    # yml = kpf.load_yaml(file)
+    # for activity_packet in yml:
+    #     if kpf.ACTIVITY in activity_packet:
+    #         activity = _deserialize_activity(activity_packet, actor_map)
+    #         activity_map[activity.activity_id] = activity
 
 def _deserialize_activity(activity_packet, actor_map):
     """
@@ -220,7 +223,7 @@ def _deserialize_actor(actor, actor_map, activity_id, activity_type, confidence,
         actor_map[actor_id].src_status = status
         actor_map[actor_id].activity_con = confidence
     else:
-        actor_map[actor_id] = Actor(  # type: ignore
+        actor_map[actor_id] = models.Actor(  # type: ignore
             clip_id=actor_id, begin=frame_timespan[0], end=frame_timespan[1],
             activity_id=activity_id, activity=activity_type, src_status=status, confidence=confidence
         )
