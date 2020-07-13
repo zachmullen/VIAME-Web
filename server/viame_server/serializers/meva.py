@@ -12,7 +12,7 @@ from dacite import from_dict, Config
 from typing import List, Dict, Tuple, Optional, Union, Any
 
 from girder.models.file import File
-from .viame import Track, Feature
+from viame_server.serializers.models import Feature, Track
 
 @dataclass
 class Detection:
