@@ -22,3 +22,8 @@
       file:
         path: /etc/systemd/system/viame-deploy.timer
         state: absent
+
+    - name: Remove systemd env file
+      file:
+        path: /etc/systemd/system/viame-deploy.env
+        state: absent

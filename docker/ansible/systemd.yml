@@ -5,16 +5,25 @@
   vars:
     # Required to use docker_compose properly
     ansible_python_interpreter: /usr/bin/python3
+  vars_files:
+    - ".vars.yml"
   tasks:
     - name: Copy systemd service
       copy:
-        src: /home/viame/docker/ansible/viame-deploy.service
+        src: "{{ project_directory }}/docker/ansible/viame-deploy.service"
         dest: /etc/systemd/system/viame-deploy.service
 
     - name: Copy systemd timer
       copy:
-        src: /home/viame/docker/ansible/viame-deploy.timer
+        src: "{{ project_directory }}/docker/ansible/viame-deploy.timer"
         dest: /etc/systemd/system/viame-deploy.timer
+    
+    - name: Inject project directory into service env file
+      lineinfile:
+        create: yes
+        path: /etc/systemd/system/viame-deploy.env
+        regexp: "^VIAME_PROJECT_SRC="
+        line: "VIAME_PROJECT_SRC={{ project_directory }}"
 
     - name: Enable timer
       systemd:

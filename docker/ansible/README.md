@@ -5,7 +5,7 @@ Typically ansible is run using `ansible-playbook` over `ssh`, however since the 
 
 # Requirements
 The server must have the following things:
-- The repository cloned to `/home/viame`
+- The cloned repository
 - Ansible
 - The Ansible [Docker Compose](https://docs.ansible.com/ansible/latest/modules/docker_compose_module.html) module
 
