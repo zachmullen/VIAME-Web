@@ -22,6 +22,7 @@ import NavigationTitle from 'app/components/NavigationTitle.vue';
 import EditorMenu from 'app/components/EditorMenu.vue';
 import ConfidenceFilter from 'app/components/ConfidenceFilter.vue';
 import UserGuideButton from 'app/components/UserGuideButton.vue';
+import UserGuideDialog from 'app/components/UserGuideDialog.vue';
 import Export from 'app/components/Export.vue';
 import RunPipelineMenu from 'app/components/RunPipelineMenu.vue';
 import FeatureHandleControls from 'app/components/FeatureHandleControls.vue';
@@ -51,6 +52,7 @@ export default defineComponent({
     ConfidenceFilter,
     RunPipelineMenu,
     UserGuideButton,
+    UserGuideDialog,
     EditorMenu,
   },
 
@@ -454,6 +456,9 @@ export default defineComponent({
           </v-list>
         </v-menu>
       </v-col>
+      <v-col cols="3" class="helpbar">
+        <user-guide-dialog/>
+      </v-col>
     </v-row>
   </v-content>
 </template>
@@ -464,5 +469,9 @@ export default defineComponent({
   right: 0;
   top: 0;
   z-index: 1;
+}
+.helpbar {
+  max-height: calc(100vh - 64px);
+  overflow: auto;
 }
 </style>
