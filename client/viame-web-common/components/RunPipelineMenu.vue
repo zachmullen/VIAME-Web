@@ -2,7 +2,7 @@
 import {
   defineComponent, computed, PropType, ref, onBeforeMount,
 } from '@vue/composition-api';
-import { Pipelines, useApi } from 'viame-web-common/apispec';
+import { Pipelines, Pipe, useApi } from 'viame-web-common/apispec';
 
 export default defineComponent({
   props: {
@@ -46,9 +46,9 @@ export default defineComponent({
       props.selectedDatasetIds.length > 1 || pipelines.value === null
     ));
 
-    async function runPipelineOnSelectedItem(pipename: string) {
+    async function runPipelineOnSelectedItem(pipeline: Pipe) {
       await Promise.all(
-        props.selectedDatasetIds.map((id) => runPipeline(id, pipename)),
+        props.selectedDatasetIds.map((id) => runPipeline(id, pipeline)),
       );
       root.$snackbar({
         text: `Started pipeline on ${props.selectedDatasetIds.length} clip${
@@ -156,12 +156,12 @@ export default defineComponent({
 
               <v-list>
                 <v-list-item
-                  v-for="({ name, pipe }) in pipelines[pipeType].pipes"
-                  :key="pipe"
-                  @click="runPipelineOnSelectedItem(pipe)"
+                  v-for="(pipeline) in pipelines[pipeType].pipes"
+                  :key="pipeline.pipe"
+                  @click="runPipelineOnSelectedItem(pipeline)"
                 >
                   <v-list-item-title>
-                    {{ name }}
+                    {{ pipeline.name }}
                   </v-list-item-title>
                 </v-list-item>
               </v-list>
