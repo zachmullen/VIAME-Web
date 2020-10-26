@@ -44,8 +44,16 @@ class Config:
 
 
 @app.task(bind=True, acks_late=True)
-def run_pipeline(self, input_path, output_folder, pipeline, input_type):
+def run_pipeline(self, params):
     conf = Config()
+
+    pipeline = params["pipeline"]
+    input_folder = params["input_folder"]
+    input_type = params["input_type"]
+    output_folder = params["output_folder"]
+
+    input_path = Path(tempfile.mkdtemp())
+    self.girder_client.downloadFolderRecursive(input_folder, input_path)
 
     # Delete is false because the file needs to exist for kwiver to write to
     # removed at the bottom of the function
@@ -152,9 +160,14 @@ def run_pipeline(self, input_path, output_folder, pipeline, input_type):
     self.girder_client.post(
         f'viame/postprocess/{output_folder}', data={"skipJobs": True}
     )
+
+    # Files
     os.remove(track_output_path)
     os.remove(detector_output_path)
-    os.remove(trained_pipeline_folder)
+
+    # Folders
+    shutil.rmtree(input_path, ignore_errors=True)
+    shutil.rmtree(trained_pipeline_folder, ignore_errors=True)
 
 
 @app.task(bind=True, acks_late=True)
