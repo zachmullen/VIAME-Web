@@ -122,7 +122,10 @@ export default defineComponent({
         key="attributes"
         class="wrapper d-flex"
       >
-        <attributes-panel />
+        <attributes-panel
+          :lock-types="typeSettings.lockTypes"
+          @track-seek="$emit('track-seek', $event)"
+        />
       </div>
     </v-slide-x-transition>
   </v-card>

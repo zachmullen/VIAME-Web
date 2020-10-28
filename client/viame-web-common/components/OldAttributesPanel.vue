@@ -3,11 +3,8 @@ import {
   computed, defineComponent, onBeforeMount, ref,
 } from '@vue/composition-api';
 
-import {
-  useSelectedTrackId, useFrame, useTrackMap, useEditingMode, useTypeStyling, useAllTypes,
-} from 'vue-media-annotator/provides';
+import { useSelectedTrackId, useFrame, useTrackMap } from 'vue-media-annotator/provides';
 import Track, { TrackId, Feature } from 'vue-media-annotator/track';
-import TrackItem from 'vue-media-annotator/components/TrackItem.vue';
 
 import { useApi, Attribute } from 'viame-web-common/apispec';
 import AttributeInput from 'viame-web-common/components/AttributeInput.vue';
@@ -23,21 +20,11 @@ function getTrack(trackMap: Readonly<Map<TrackId, Track>>, trackId: TrackId): Tr
 export default defineComponent({
   components: {
     AttributeInput,
-    TrackItem,
   },
-  props: {
-    lockTypes: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  setup(props) {
+
+  setup() {
     const attributes = ref([] as Attribute[]);
     const trackMap = useTrackMap();
-    const editingModeRef = useEditingMode();
-    const typeStylingRef = useTypeStyling();
-    const allTypesRef = useAllTypes();
-
     const frameRef = useFrame();
     const selectedTrackIdRef = useSelectedTrackId();
     const { getAttributes } = useApi();
@@ -52,12 +39,6 @@ export default defineComponent({
         return getTrack(trackMap, selectedTrackIdRef.value);
       }
       return null;
-    });
-    const trackType = computed(() => {
-      if (selectedTrack.value !== null) {
-        return selectedTrack.value.confidencePairs[0][0];
-      }
-      return '';
     });
     const selectedDetection = computed(() => {
       const t = selectedTrack.value;
@@ -103,10 +84,6 @@ export default defineComponent({
       /* Update functions */
       updateFeatureAttribute,
       updateTrackAttribute,
-      editingModeRef,
-      trackType,
-      typeStylingRef,
-      allTypesRef,
     };
   },
 });
@@ -121,7 +98,7 @@ export default defineComponent({
       class="flex-shrink-1"
       style="overflow-y: auto;"
     >
-      <v-subheader>Track Editor</v-subheader>
+      <v-subheader>Track attributes</v-subheader>
       <div
         v-if="!selectedTrack"
         class="ml-4 body-2"
@@ -133,46 +110,16 @@ export default defineComponent({
           class="mx-4 body-2"
           style="line-height:22px;"
         >
-          <datalist id="allTypesOptions">
-            <option
-              v-for="type in allTypesRef"
-              :key="type"
-              :value="type"
+          <div>Track ID: {{ selectedTrack.trackId }}</div>
+          <div>
+            Confidence pairs:
+            <div
+              v-for="(pair, index) in selectedTrack.confidencePairs"
+              :key="index"
+              class="ml-3"
             >
-              {{ type }}
-            </option>
-          </datalist>
-
-          <track-item
-            :single-display="true"
-            :track="selectedTrack"
-            :track-type="trackType"
-            :selected="true"
-            :editing="!!editingModeRef"
-            :input-value="true"
-            :color="typeStylingRef.color(trackType)"
-            :lock-types="lockTypes"
-            @seek="$emit('track-seek', $event)"
-          />
-          <v-row>
-            <v-col>
-              <v-subheader>Confidence pairs:</v-subheader>
-              <v-row
-                v-for="(pair, index) in selectedTrack.confidencePairs"
-                :key="index"
-                class="ml-3"
-              >
-                <v-col>
-                  {{ pair[0] }}
-                </v-col>
-                <v-col>
-                  {{ pair[1].toFixed(2) }}
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-subheader>Track Attributes:</v-subheader>
+              {{ pair[0] }}: {{ pair[1].toFixed(2) }}
+            </div>
             <div v-if="Object.keys(selectedTrack.attributes).length">
               <br>
               Attributes:
@@ -184,20 +131,20 @@ export default defineComponent({
                 {{ index }}: {{ pair }}
               </div>
             </div>
-            <AttributeInput
-              v-for="(attribute, i) of trackAttributes"
-              :key="i"
-              :datatype="attribute.datatype"
-              :name="attribute.name"
-              :values="attribute.values ? attribute.values : null"
-              :value="
-                selectedTrack
-                  ? selectedTrack.attributes[attribute.name]
-                  : undefined
-              "
-              @change="updateTrackAttribute(selectedTrackIdRef, $event)"
-            />
-          </v-row>
+          </div>
+          <AttributeInput
+            v-for="(attribute, i) of trackAttributes"
+            :key="i"
+            :datatype="attribute.datatype"
+            :name="attribute.name"
+            :values="attribute.values ? attribute.values : null"
+            :value="
+              selectedTrack
+                ? selectedTrack.attributes[attribute.name]
+                : undefined
+            "
+            @change="updateTrackAttribute(selectedTrackIdRef, $event)"
+          />
         </div>
       </template>
     </v-col>
