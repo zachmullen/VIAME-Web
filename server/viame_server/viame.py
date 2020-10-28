@@ -17,10 +17,10 @@ from viame_tasks.tasks import (
 from .constants import csvRegex, imageRegex, safeImageRegex, videoRegex, ymlRegex
 from .model.attribute import Attribute
 from .pipelines import (
-    load_pipelines,
-    load_static_pipelines,
     PipelineDescription,
     PipelineJob,
+    load_pipelines,
+    load_static_pipelines,
 )
 from .serializers import meva as meva_serializer
 from .training import (
