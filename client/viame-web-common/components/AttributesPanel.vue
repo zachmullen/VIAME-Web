@@ -113,12 +113,11 @@ export default defineComponent({
 </script>
 
 <template>
+<v-container>
   <v-row
-    class="attributes-panel flex-column"
-    no-gutters
+    class="attributes-panel"
   >
     <v-col
-      class="flex-shrink-1"
       style="overflow-y: auto;"
     >
       <v-subheader>Track Editor</v-subheader>
@@ -129,7 +128,7 @@ export default defineComponent({
         No track selected
       </div>
       <template v-else>
-        <div
+        <v-row
           class="mx-4 body-2"
           style="line-height:22px;"
         >
@@ -154,85 +153,137 @@ export default defineComponent({
             :lock-types="lockTypes"
             @seek="$emit('track-seek', $event)"
           />
-          <v-row>
-            <v-col>
-              <v-subheader>Confidence pairs:</v-subheader>
-              <v-row
-                v-for="(pair, index) in selectedTrack.confidencePairs"
-                :key="index"
-                class="ml-3"
+        </v-row>
+        <v-subheader>Confidence pairs:</v-subheader>
+        <v-row
+          dense
+          style="max-height:20%"
+        >
+          <v-col>
+            <v-row
+              v-for="(pair, index) in selectedTrack.confidencePairs"
+              :key="index"
+              class="ml-1"
+              dense
+              style="font-size:.8em"
+            >
+              <v-col>
+                {{ pair[0] }}
+              </v-col>
+              <v-col>
+                {{ pair[1].toFixed(2) }}
+              </v-col>
+            </v-row>
+          </v-col>
+        </v-row>
+        <v-subheader>
+          <v-container>
+            <v-row>
+              Track Attributes:
+              <v-spacer />
+              <v-tooltip
+                open-delay="200"
+                bottom
+                max-width="200"
               >
-                <v-col>
-                  {{ pair[0] }}
-                </v-col>
-                <v-col>
-                  {{ pair[1].toFixed(2) }}
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-subheader>Track Attributes:</v-subheader>
-            <div v-if="Object.keys(selectedTrack.attributes).length">
-              <br>
-              Attributes:
-              <div
-                v-for="(pair, index) in selectedTrack.attributes"
-                :key="index"
-                class="ml-3"
-              >
-                {{ index }}: {{ pair }}
-              </div>
+                <template #activator="{ on }">
+                  <v-btn
+                    outlined
+                    x-small
+                    class="mr-2"
+                    :color="newTrackColor"
+                    v-on="on"
+                    @click="trackAdd"
+                  >
+                    <v-icon small>
+                      mdi-plus
+                    </v-icon>
+                    Attribute
+                  </v-btn>
+                </template>
+                <span>Add a new Track Attribute</span>
+              </v-tooltip>
+            </v-row>
+          </v-container>
+        </v-subheader>
+        <v-row
+          style="max-height:20%; overflow-y:auto"
+        >
+          <v-col>
+            <v-row
+              v-for="(attribute, i) of trackAttributes"
+              :key="i"
+              class="ml-1"
+              dense
+              align="center"
+            >
+              <v-col style="font-size:.8em">
+                {{ attribute.name }}:
+              </v-col>
+              <v-col class="px-1">
+                <AttributeInput
+                  :datatype="attribute.datatype"
+                  :name="attribute.values ? attribute.datatype : `${attribute.datatype}`"
+                  :values="attribute.values ? attribute.values : null"
+                  :value="
+                    selectedTrack
+                      ? selectedTrack.attributes[attribute.name]
+                      : undefined
+                  "
+                  @change="updateTrackAttribute(selectedTrackIdRef, $event)"
+                />
+              </v-col>
+              <v-col cols="1">
+                <v-btn
+                  icon
+                  small
+                  class="mr-2"
+                >
+                  <v-icon
+                    small
+                  >
+                    mdi-settings
+                  </v-icon>
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-col>
+        </v-row>
+      </template>
+      <v-col style="overflow-y: auto;">
+        <v-subheader>Detection attributes</v-subheader>
+        <div
+          v-if="!selectedDetection"
+          class="ml-4 body-2"
+        >
+          No detection selected
+        </div>
+        <template v-else>
+          <div
+            class="mx-4 body-2"
+            style="line-height:22px;"
+          >
+            <div>Frame: {{ selectedDetection.frame }}</div>
+            <div v-if="selectedDetection.fishLength">
+              Fish length: {{ selectedDetection.fishLength }}
             </div>
             <AttributeInput
-              v-for="(attribute, i) of trackAttributes"
+              v-for="(attribute, i) of detectionAttributes"
               :key="i"
               :datatype="attribute.datatype"
               :name="attribute.name"
               :values="attribute.values ? attribute.values : null"
               :value="
-                selectedTrack
-                  ? selectedTrack.attributes[attribute.name]
+                (selectedDetection && selectedDetection.attributes)
+                  ? selectedDetection.attributes[attribute.name]
                   : undefined
               "
-              @change="updateTrackAttribute(selectedTrackIdRef, $event)"
+              @change="updateFeatureAttribute(selectedTrackIdRef, selectedDetection, $event)"
             />
-          </v-row>
-        </div>
-      </template>
-    </v-col>
-    <v-col style="overflow-y: auto;">
-      <v-subheader>Detection attributes</v-subheader>
-      <div
-        v-if="!selectedDetection"
-        class="ml-4 body-2"
-      >
-        No detection selected
-      </div>
-      <template v-else>
-        <div
-          class="mx-4 body-2"
-          style="line-height:22px;"
-        >
-          <div>Frame: {{ selectedDetection.frame }}</div>
-          <div v-if="selectedDetection.fishLength">
-            Fish length: {{ selectedDetection.fishLength }}
           </div>
-          <AttributeInput
-            v-for="(attribute, i) of detectionAttributes"
-            :key="i"
-            :datatype="attribute.datatype"
-            :name="attribute.name"
-            :values="attribute.values ? attribute.values : null"
-            :value="
-              (selectedDetection && selectedDetection.attributes)
-                ? selectedDetection.attributes[attribute.name]
-                : undefined
-            "
-            @change="updateFeatureAttribute(selectedTrackIdRef, selectedDetection, $event)"
-          />
-        </div>
-      </template>
+        </template>
+      </v-col>
     </v-col>
   </v-row>
+</v-container>
 </template>

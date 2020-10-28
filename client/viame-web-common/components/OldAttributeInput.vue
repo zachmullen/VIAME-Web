@@ -52,7 +52,6 @@ export default Vue.extend({
       :items="['', ...values]"
       autocomplete="off"
       @change="change"
-      dense
     />
     <v-text-field
       v-else-if="datatype === 'number'"
@@ -61,7 +60,6 @@ export default Vue.extend({
       type="number"
       autocomplete="off"
       @change="change"
-      dense
     />
     <v-select
       v-else-if="datatype === 'boolean'"
@@ -73,7 +71,6 @@ export default Vue.extend({
         { text: 'false', value: false }
       ]"
       @change="change"
-      dense
     />
   </div>
 </template>
