@@ -7,7 +7,7 @@ import { useSelectedTrackId, useFrame, useTrackMap } from 'vue-media-annotator/p
 import Track, { TrackId, Feature } from 'vue-media-annotator/track';
 
 import { useApi, Attribute } from 'viame-web-common/apispec';
-import AttributeInput from 'viame-web-common/components/AttributeInput.vue';
+import OldAttributeInput from 'viame-web-common/components/OldAttributeInput.vue';
 
 function getTrack(trackMap: Readonly<Map<TrackId, Track>>, trackId: TrackId): Track {
   const track = trackMap.get(trackId);
@@ -19,7 +19,7 @@ function getTrack(trackMap: Readonly<Map<TrackId, Track>>, trackId: TrackId): Tr
 
 export default defineComponent({
   components: {
-    AttributeInput,
+    OldAttributeInput,
   },
 
   setup() {
@@ -132,7 +132,7 @@ export default defineComponent({
               </div>
             </div>
           </div>
-          <AttributeInput
+          <OldAttributeInput
             v-for="(attribute, i) of trackAttributes"
             :key="i"
             :datatype="attribute.datatype"
@@ -165,7 +165,7 @@ export default defineComponent({
           <div v-if="selectedDetection.fishLength">
             Fish length: {{ selectedDetection.fishLength }}
           </div>
-          <AttributeInput
+          <OldAttributeInput
             v-for="(attribute, i) of detectionAttributes"
             :key="i"
             :datatype="attribute.datatype"
