@@ -1,6 +1,6 @@
 <script lang="ts">
 import {
-  computed, defineComponent, onBeforeMount, ref,
+  computed, defineComponent, onBeforeMount, reactive, ref,
 } from '@vue/composition-api';
 
 import {
@@ -38,6 +38,12 @@ export default defineComponent({
     const typeStylingRef = useTypeStyling();
     const allTypesRef = useAllTypes();
 
+    const activeSettings = reactive({
+      confidencePairs: false,
+      trackAttributes: false,
+      detectionAttributes: false,
+    });
+
     const frameRef = useFrame();
     const selectedTrackIdRef = useSelectedTrackId();
     const { getAttributes } = useApi();
@@ -49,7 +55,6 @@ export default defineComponent({
     ));
     const selectedTrack = computed(() => {
       if (selectedTrackIdRef.value !== null) {
-        console.log(getTrack(trackMap, selectedTrackIdRef.value));
         return getTrack(trackMap, selectedTrackIdRef.value);
       }
       return null;
@@ -68,7 +73,13 @@ export default defineComponent({
       }
       return null;
     });
-
+    const activeTrackAttributesCount = computed(() => trackAttributes.value.filter(
+      (a) => selectedTrack.value && selectedTrack.value.attributes[a.name] !== undefined,
+    ).length);
+    const activeDetectionAttributesCount = computed(() => detectionAttributes.value.filter(
+      (a) => selectedDetection.value && selectedDetection.value.attributes
+        && selectedDetection.value.attributes[a.name] !== undefined,
+    ).length);
     function updateTrackAttribute(
       trackId: TrackId | null,
       { name, value }: { name: string; value: unknown },
@@ -96,6 +107,15 @@ export default defineComponent({
     function detectionAttributeAdd() {
       console.log('Add Track Attribute');
     }
+    function confidencePairsAdd() {
+      console.log('Add Confidence Pairs');
+    }
+
+    function toggleActiveSettings(
+      type: 'confidencePairs' | 'trackAttributes' | 'detectionAttributes',
+    ) {
+      activeSettings[type] = !activeSettings[type];
+    }
 
     onBeforeMount(async () => {
       attributes.value = await getAttributes();
@@ -106,14 +126,19 @@ export default defineComponent({
       /* Attributes */
       detectionAttributes,
       trackAttributes,
+      activeSettings,
+      activeTrackAttributesCount,
+      activeDetectionAttributesCount,
       /* Selected */
       selectedDetection,
       selectedTrack,
       /* Update functions */
+      toggleActiveSettings,
       updateFeatureAttribute,
       updateTrackAttribute,
       trackAttributeAdd,
       detectionAttributeAdd,
+      confidencePairsAdd,
       editingModeRef,
       trackType,
       typeStylingRef,
@@ -167,10 +192,58 @@ export default defineComponent({
                 @seek="$emit('track-seek', $event)"
               />
             </v-row>
+            <v-spacer />
             <v-subheader class="border-highlight">
-              Confidence Pairs
-            </v-subheader>
-            <v-row
+              <v-row>
+                <b>Confidence Pairs:</b>
+                <v-spacer />
+                <v-tooltip
+                  v-if="activeSettings.confidencePairs"
+                  open-delay="200"
+                  bottom
+                  max-width="200"
+                >
+                  <template #activator="{ on }">
+                    <v-btn
+                      outlined
+                      x-small
+                      class="mr-2"
+                      v-on="on"
+                      @click="confidencePairsAdd"
+                    >
+                      <v-icon small>
+                        mdi-plus
+                      </v-icon>
+                      Attribute
+                    </v-btn>
+                  </template>
+                  <span>Add a new Confidence Pair</span>
+                </v-tooltip>
+                <v-tooltip
+                  open-delay="200"
+                  bottom
+                  max-width="200"
+                >
+                  <template #activator="{ on }">
+                    <v-btn
+                      small
+                      icon
+                      class="pb-2 ml-2"
+                      :color="activeSettings.confidencePairs ? 'accent': ''"
+                      v-on="on"
+                      @click="toggleActiveSettings('confidencePairs')"
+                    >
+                      <v-icon
+                        small
+                      >
+                        mdi-pencil
+                      </v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Edit ConfidencePairs</span>
+                </v-tooltip>
+              </v-row>
+            </v-subheader>            <v-row
               dense
               style="max-height:20%"
             >
@@ -193,9 +266,10 @@ export default defineComponent({
             </v-row>
             <v-subheader class="border-highlight">
               <v-row>
-                Track Attributes:
+                <b>Track Attributes:</b>
                 <v-spacer />
                 <v-tooltip
+                  v-if="activeSettings.trackAttributes"
                   open-delay="200"
                   bottom
                   max-width="200"
@@ -216,59 +290,6 @@ export default defineComponent({
                   </template>
                   <span>Add a new Track Attribute</span>
                 </v-tooltip>
-              </v-row>
-            </v-subheader>
-            <v-row
-              class="ma-0"
-              style="max-height:20%; overflow-y:auto; overflow-x:hidden"
-              dense
-            >
-              <v-col class="pa-2">
-                <v-row
-                  v-for="(attribute, i) of trackAttributes"
-                  :key="i"
-                  class="ma-0"
-                  dense
-                  align="center"
-                >
-                  <v-col style="font-size:.8em">
-                    {{ attribute.name }}:
-                  </v-col>
-                  <v-col class="px-1">
-                    <AttributeInput
-                      :datatype="attribute.datatype"
-                      :name="attribute.name"
-                      :values="attribute.values ? attribute.values : null"
-                      :value="
-                        selectedTrack
-                          ? selectedTrack.attributes[attribute.name]
-                          : undefined
-                      "
-                      @change="updateTrackAttribute(selectedTrackIdRef, $event)"
-                    />
-                  </v-col>
-                  <v-col cols="1">
-                    <v-btn
-                      icon
-                      small
-                    >
-                      <v-icon
-                        small
-                      >
-                        mdi-settings
-                      </v-icon>
-                    </v-btn>
-                  </v-col>
-                </v-row>
-              </v-col>
-            </v-row>
-            <v-subheader
-              v-if="selectedDetection"
-              class="border-highlight"
-            >
-              <v-row class="pt-2">
-                Detection Attributes:
-                <v-spacer />
                 <v-tooltip
                   open-delay="200"
                   bottom
@@ -276,24 +297,153 @@ export default defineComponent({
                 >
                   <template #activator="{ on }">
                     <v-btn
-                      outlined
-                      x-small
-                      class="mr-2"
+                      small
+                      icon
+                      class="pb-2 ml-2"
+                      :color="activeSettings.trackAttributes ? 'accent': ''"
                       v-on="on"
-                      @click="detectionAttributeAdd"
+                      @click="toggleActiveSettings('trackAttributes')"
                     >
-                      <v-icon small>
-                        mdi-plus
+                      <v-icon
+                        small
+                      >
+                        mdi-pencil
                       </v-icon>
-                      Attribute
                     </v-btn>
                   </template>
-                  <span>Add a new Detection Attribute</span>
+                  <span>Edit Attributes</span>
                 </v-tooltip>
-                <div>
-                  {{ `Frame: ${selectedDetection.frame}` }}
-                </div>
               </v-row>
+            </v-subheader>
+            <v-row
+              class="ma-0"
+              style="max-height:30vh; overflow-y:auto; overflow-x:hidden"
+              dense
+            >
+              <v-col
+                v-if="activeSettings.trackAttributes ||activeTrackAttributesCount"
+                class="pa-2"
+              >
+                <span
+                  v-for="(attribute, i) of trackAttributes"
+                  :key="i"
+                >
+                  <v-row
+                    v-if="
+                      activeSettings.trackAttributes || selectedTrack.attributes[attribute.name]"
+                    class="ma-0"
+                    dense
+                    align="center"
+                  >
+                    <v-col
+                      style="font-size:.8em"
+                    >
+                      {{ attribute.name }}:
+                    </v-col>
+                    <v-col class="px-1">
+                      <AttributeInput
+                        v-if="activeSettings.trackAttributes"
+                        :datatype="attribute.datatype"
+                        :name="attribute.name"
+                        :values="attribute.values ? attribute.values : null"
+                        :value="
+                          selectedTrack
+                            ? selectedTrack.attributes[attribute.name]
+                            : undefined
+                        "
+                        @change="updateTrackAttribute(selectedTrackIdRef, $event)"
+                      />
+                      <div
+                        v-else
+                      >
+                        {{ selectedTrack.attributes[attribute.name] }}
+                      </div>
+                    </v-col>
+                    <v-col
+                      v-if="activeSettings.trackAttributes"
+                      cols="1"
+                    >
+                      <v-btn
+                        icon
+                        small
+                      >
+                        <v-icon
+                          small
+                        >
+                          mdi-settings
+                        </v-icon>
+                      </v-btn>
+                    </v-col>
+                  </v-row>
+                </span>
+              </v-col>
+              <v-col v-else>
+                <div>
+                  No Track Attributes Set
+                </div>
+              </v-col>
+            </v-row>
+            <v-subheader
+              v-if="selectedDetection"
+              class="border-highlight"
+            >
+              <v-container
+                dense
+                class="px-0 my-2"
+              >
+                <v-row class="pt-2">
+                  <b>Detection Attributes:</b>
+                  <v-spacer />
+                  <v-tooltip
+                    v-if="activeSettings.detectionAttributes"
+                    open-delay="200"
+                    bottom
+                    max-width="200"
+                  >
+                    <template #activator="{ on }">
+                      <v-btn
+                        outlined
+                        x-small
+                        class="mr-2"
+                        v-on="on"
+                        @click="detectionAttributeAdd"
+                      >
+                        <v-icon small>
+                          mdi-plus
+                        </v-icon>
+                        Attribute
+                      </v-btn>
+                    </template>
+                    <span>Add a new Detection Attribute</span>
+                  </v-tooltip>
+                  <v-tooltip
+                    open-delay="200"
+                    bottom
+                    max-width="200"
+                  >
+                    <template #activator="{ on }">
+                      <v-btn
+                        small
+                        icon
+                        class="pb-2 ml-2"
+                        :color="activeSettings.detectionAttributes ? 'accent': ''"
+                        v-on="on"
+                        @click="toggleActiveSettings('detectionAttributes')"
+                      >
+                        <v-icon
+                          small
+                        >
+                          mdi-pencil
+                        </v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Edit Attributes</span>
+                  </v-tooltip>
+                </v-row>
+                <v-row class="mb-1">
+                  {{ `Frame: ${selectedDetection.frame}` }}
+                </v-row>
+              </v-container>
             </v-subheader>
             <v-subheader
               v-else
@@ -304,47 +454,69 @@ export default defineComponent({
             <v-row
               v-if="selectedDetection"
               class="ma-0"
-              style="max-height:20%; overflow-y:auto; overflow-x:hidden"
+              style="max-height:30vh; overflow-y:auto; overflow-x:hidden"
               dense
             >
-              <v-col class="pa-2">
-                <v-row
+              <v-col
+                v-if="activeSettings.detectionAttributes || activeDetectionAttributesCount"
+                class="pa-2"
+              >
+                <span
                   v-for="(attribute, i) of detectionAttributes"
                   :key="i"
-                  class="ma-0"
-                  dense
-                  align="center"
                 >
-                  <v-col style="font-size:.8em">
-                    {{ attribute.name }}:
-                  </v-col>
-                  <v-col class="px-1">
-                    <AttributeInput
-                      :datatype="attribute.datatype"
-                      :name="attribute.name"
-                      :values="attribute.values ? attribute.values : null"
-                      :value="
-                        selectedDetection && selectedDetection.attributes
-                          ? selectedDetection.attributes[attribute.name]
-                          : undefined
-                      "
-                      @change="updateFeatureAttribute(
-                        selectedTrackIdRef, selectedDetection, $event)"
-                    />
-                  </v-col>
-                  <v-col cols="1">
-                    <v-btn
-                      icon
-                      small
+                  <v-row
+                    v-if="activeSettings.detectionAttributes
+                      || selectedDetection.attributes[attribute.name]"
+                    class="ma-0"
+                    dense
+                    align="center"
+                  >
+                    <v-col style="font-size:.8em">
+                      {{ attribute.name }}:
+                    </v-col>
+                    <v-col class="px-1">
+                      <AttributeInput
+                        v-if="activeSettings.detectionAttributes"
+                        :datatype="attribute.datatype"
+                        :name="attribute.name"
+                        :values="attribute.values ? attribute.values : null"
+                        :value="
+                          selectedDetection && selectedDetection.attributes
+                            ? selectedDetection.attributes[attribute.name]
+                            : undefined
+                        "
+                        @change="updateFeatureAttribute(
+                          selectedTrackIdRef, selectedDetection, $event)"
+                      />
+                      <div
+                        v-else
+                      >
+                        {{ selectedDetection.attributes[attribute.name] }}
+                      </div>
+                    </v-col>
+                    <v-col
+                      v-if="activeSettings.detectionAttributes"
+                      cols="1"
                     >
-                      <v-icon
+                      <v-btn
+                        icon
                         small
                       >
-                        mdi-settings
-                      </v-icon>
-                    </v-btn>
-                  </v-col>
-                </v-row>
+                        <v-icon
+                          small
+                        >
+                          mdi-settings
+                        </v-icon>
+                      </v-btn>
+                    </v-col>
+                  </v-row>
+                </span>
+              </v-col>
+              <v-col v-else>
+                <div>
+                  No Detection Attributes Set
+                </div>
               </v-col>
             </v-row>
           </template>
