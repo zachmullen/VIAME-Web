@@ -1,6 +1,6 @@
 <script lang="ts">
 import {
-  computed, defineComponent, onBeforeMount, reactive, ref,
+  computed, defineComponent, onBeforeMount, reactive, Ref, ref,
 } from '@vue/composition-api';
 
 import {
@@ -11,6 +11,7 @@ import TrackItem from 'vue-media-annotator/components/TrackItem.vue';
 
 import { useApi, Attribute } from 'viame-web-common/apispec';
 import AttributeInput from 'viame-web-common/components/AttributeInput.vue';
+import AttributeEditor from 'viame-web-common/components/AttributeEditor.vue';
 
 function getTrack(trackMap: Readonly<Map<TrackId, Track>>, trackId: TrackId): Track {
   const track = trackMap.get(trackId);
@@ -24,6 +25,7 @@ export default defineComponent({
   components: {
     AttributeInput,
     TrackItem,
+    AttributeEditor,
   },
   props: {
     lockTypes: {
@@ -33,6 +35,7 @@ export default defineComponent({
   },
   setup(props) {
     const attributes = ref([] as Attribute[]);
+    const editingAttribute: Ref<Attribute | null> = ref(null);
     const trackMap = useTrackMap();
     const editingModeRef = useEditingMode();
     const typeStylingRef = useTypeStyling();
@@ -84,7 +87,6 @@ export default defineComponent({
       trackId: TrackId | null,
       { name, value }: { name: string; value: unknown },
     ) {
-      console.log(`Updating Track Attribute: ${name} with ${value}`);
       if (trackId === null) return;
       const track = getTrack(trackMap, trackId);
       track.setAttribute(name, value);
@@ -101,8 +103,21 @@ export default defineComponent({
       track.setFeatureAttribute(oldFeature.frame, name, value);
     }
 
+    async function closeEditor() {
+      editingAttribute.value = null;
+      attributes.value = await getAttributes();
+    }
+
     function trackAttributeAdd() {
-      console.log('Add Track Attribute');
+      editingAttribute.value = {
+        belongs: 'track',
+        datatype: 'text',
+        name: 'NewAttribute',
+        _id: '',
+      };
+    }
+    function editAttribute(attribute: Attribute) {
+      editingAttribute.value = attribute;
     }
     function detectionAttributeAdd() {
       console.log('Add Track Attribute');
@@ -129,10 +144,13 @@ export default defineComponent({
       activeSettings,
       activeTrackAttributesCount,
       activeDetectionAttributesCount,
+      editingAttribute,
       /* Selected */
       selectedDetection,
       selectedTrack,
       /* Update functions */
+      closeEditor,
+      editAttribute,
       toggleActiveSettings,
       updateFeatureAttribute,
       updateTrackAttribute,
@@ -366,6 +384,7 @@ export default defineComponent({
                       <v-btn
                         icon
                         small
+                        @click="editAttribute(attribute)"
                       >
                         <v-icon
                           small
@@ -502,6 +521,7 @@ export default defineComponent({
                       <v-btn
                         icon
                         small
+                        @click="editAttribute(attribute)"
                       >
                         <v-icon
                           small
@@ -523,6 +543,12 @@ export default defineComponent({
         </v-col>
       </v-row>
     </v-container>
+    <attribute-editor
+      v-if="editingAttribute != null"
+      :show="editingAttribute != null"
+      :selected-attribute="editingAttribute"
+      @close="closeEditor"
+    />
   </div>
 </template>
 

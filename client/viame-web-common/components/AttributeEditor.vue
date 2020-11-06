@@ -2,6 +2,16 @@
 export default {
   name: 'AttributeSettings',
   inject: ['girderRest'],
+  props: {
+    show: {
+      type: Boolean,
+      default: false,
+    },
+    selectedAttribute: {
+      type: Object,
+      required: true,
+    },
+  },
   data: () => ({
     selectedIndex: undefined,
     name: '',
@@ -12,18 +22,6 @@ export default {
     changed: false,
   }),
   computed: {
-    selectedAttribute() {
-      if (
-        this.selectedIndex !== undefined
-        && this.attributes[this.selectedIndex]
-      ) {
-        return this.attributes[this.selectedIndex];
-      }
-      return null;
-    },
-    disabled() {
-      return this.selectedIndex === undefined && this.addNew === false;
-    },
     textValues: {
       get() {
         if (this.values) {
@@ -36,29 +34,7 @@ export default {
       },
     },
   },
-  asyncComputed: {
-    async attributes() {
-      const { data } = await this.girderRest.get('/viame/attribute');
-      return data;
-    },
-  },
   watch: {
-    selectedAttribute(attribute) {
-      if (attribute) {
-        this.addNew = false;
-        this.name = attribute.name;
-        this.belongs = attribute.belongs;
-        this.datatype = attribute.datatype;
-        this.values = attribute.values;
-      } else {
-        this.name = '';
-        this.belongs = 'track';
-        this.datatype = 'number';
-      }
-      this.$nextTick(() => {
-        this.changed = false;
-      });
-    },
     name() {
       this.changed = true;
     },
@@ -70,6 +46,23 @@ export default {
     },
     values() {
       this.changed = true;
+    },
+  },
+  mounted() {
+    this.name = this.selectedAttribute.name;
+    this.belongs = this.selectedAttribute.belongs;
+    this.datatype = this.selectedAttribute.datatype;
+    this.values = this.selectedAttribute.values;
+    if (!this.selectedAttribute._id.length) {
+      this.addNew = true;
+    } else {
+      this.addNew = false;
+    }
+  },
+  asyncComputed: {
+    async attributes() {
+      const { data } = await this.girderRest.get('/viame/attribute');
+      return data;
     },
   },
   created() {
@@ -110,7 +103,6 @@ export default {
           content,
         );
       }
-      this.$asyncComputed.attributes.update();
       this.changed = false;
     },
     async deleteAttribute() {
@@ -125,54 +117,31 @@ export default {
       await this.girderRest.delete(
         `/viame/attribute/${this.selectedAttribute._id}`,
       );
-      this.$asyncComputed.attributes.update();
     },
   },
 };
 </script>
 
 <template>
-  <v-card class="attribute-settings">
-    <v-card-title class="pb-0">
-      Attributes
-    </v-card-title>
-    <v-card-text>
-      <v-row>
-        <v-col cols="2">
-          <v-list
-            v-if="attributes"
-            dense
-          >
-            <v-list-item-group
-              v-model="selectedIndex"
-              color="primary"
-            >
-              <v-list-item
-                v-for="attribute in attributes"
-                :key="attribute._id"
-              >
-                <v-list-item-content>
-                  <v-list-item-title>{{ attribute.name }}</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-col>
-        <v-col>
+  <v-dialog
+    v-model="show"
+    max-width="350"
+  >
+    <v-card class="attribute-settings">
+      <v-card-title class="pb-0">
+        Attributes
+        <v-card-text>
           <v-form ref="form">
             <v-text-field
               v-model="name"
-              style="max-width: 220px;"
               label="Name"
               :rules="[v => !!v || 'Name is required']"
               required
-              :disabled="disabled"
             />
             <v-radio-group
               v-model="belongs"
               label="Belongs to"
               :mandatory="true"
-              :disabled="disabled"
             >
               <v-radio
                 label="Track"
@@ -192,7 +161,6 @@ export default {
                 { text: 'Text', value: 'text' }
               ]"
               label="Datatype"
-              :disabled="disabled"
             />
             <v-textarea
               v-if="datatype === 'text'"
@@ -203,45 +171,50 @@ export default {
               auto-grow
               row-height="30"
             />
-            <v-row>
-              <v-col>
-                <v-btn
-                  type="submit"
-                  color="primary"
-                  :disabled="disabled || !changed"
-                  @click.prevent="submit"
-                >
-                  {{ addNew ? "Add" : "Save" }}
-                </v-btn>
-                <v-btn
-                  v-if="!addNew && !disabled"
-                  text
-                  class="ml-3"
-                  color="error"
-                  @click.prevent="deleteAttribute"
-                >
-                  Delete
-                </v-btn>
-              </v-col>
-            </v-row>
           </v-form>
-          <v-btn
-            absolute
-            dark
-            class="mb-8"
-            fab
-            small
-            bottom
-            right
-            color="primary"
-            @click="add"
-          >
-            <v-icon>mdi-plus</v-icon>
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-card-text>
-  </v-card>
+          <v-card-actions>
+            <v-row>
+              <v-tooltip
+                open-delay="100"
+                bottom
+              >
+                <template #activator="{ on }">
+                  <div v-on="on">
+                    <v-btn
+                      class="hover-show-child"
+                      color="error"
+                      :disabled="!selectedAttribute._id.length"
+                      @click.prevent="deleteAttribute"
+                    >
+                      Delete
+                    </v-btn>
+                  </div>
+                </template>
+                <span
+                  class="ma-0 pa-1"
+                >
+                  Deletion of Attribute
+                </span>
+              </v-tooltip>
+              <v-spacer />
+              <v-btn
+                text
+                @click="$emit('close')"
+              >
+                Cancel
+              </v-btn>
+              <v-btn
+                color="primary"
+                @click.prevent="submit"
+              >
+                Save
+              </v-btn>
+            </v-row>
+          </v-card-actions>
+        </v-card-text>
+      </v-card-title>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style lang="scss">
