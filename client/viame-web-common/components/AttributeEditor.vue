@@ -103,6 +103,7 @@ export default {
           content,
         );
       }
+      this.$emit('close');
       this.changed = false;
     },
     async deleteAttribute() {
@@ -117,6 +118,7 @@ export default {
       await this.girderRest.delete(
         `/viame/attribute/${this.selectedAttribute._id}`,
       );
+      this.$emit('close');
     },
   },
 };
@@ -138,20 +140,6 @@ export default {
               :rules="[v => !!v || 'Name is required']"
               required
             />
-            <v-radio-group
-              v-model="belongs"
-              label="Belongs to"
-              :mandatory="true"
-            >
-              <v-radio
-                label="Track"
-                value="track"
-              />
-              <v-radio
-                label="Detection"
-                value="detection"
-              />
-            </v-radio-group>
             <v-select
               v-model="datatype"
               style="max-width: 220px;"
