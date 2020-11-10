@@ -356,7 +356,8 @@ export default defineComponent({
           >
             <v-row
               v-if="
-                activeSettings.trackAttributes || selectedTrack.attributes[attribute.name]"
+                activeSettings.trackAttributes ||
+                  selectedTrack.attributes[attribute.name] !== undefined"
               class="ma-0"
               dense
               align="center"
@@ -497,7 +498,7 @@ export default defineComponent({
           >
             <v-row
               v-if="activeSettings.detectionAttributes
-                || selectedDetection.attributes[attribute.name]"
+                || selectedDetection.attributes[attribute.name] !== undefined"
               class="ma-0"
               dense
               align="center"
