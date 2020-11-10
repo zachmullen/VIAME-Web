@@ -156,6 +156,7 @@ export default {
               style="max-width: 250px;"
               label="Predefined values"
               hint="Line separated values"
+              outlined
               auto-grow
               row-height="30"
             />
